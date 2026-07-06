@@ -1,0 +1,57 @@
+name: Build Salvia AI APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Generate Android native files (gradlew, gradle wrapper, local.properties)
+        run: flutter create . --platforms android
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate app icon
+        run: flutter pub run flutter_launcher_icons
+
+      - name: Generate l10n
+        run: flutter gen-l10n || true
+
+      - name: Run build_runner
+        run: dart run build_runner build --delete-conflicting-outputs || true
+
+      - name: Analyze
+        run: flutter analyze || true
+
+      - name: Test
+        run: flutter test || true
+
+      - name: Build APK (split per ABI)
+        run: flutter build apk --release --split-per-abi
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: salvia-ai-apk
+          path: build/app/outputs/flutter-apk/
+          retention-days: 30
