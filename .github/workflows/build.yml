@@ -40,11 +40,11 @@ jobs:
       - name: Run build_runner
         run: dart run build_runner build --delete-conflicting-outputs || true
 
-      - name: Analyze
-        run: flutter analyze || true
+      - name: Analyze (blocking)
+        run: flutter analyze
 
-      - name: Test
-        run: flutter test || true
+      - name: Test (blocking)
+        run: flutter test
 
       - name: Build APK (split per ABI)
         run: flutter build apk --release --split-per-abi
